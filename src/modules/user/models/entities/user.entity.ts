@@ -33,7 +33,7 @@ export class User {
   is_email_verified: boolean;
 
   @OneToMany(() => LoginEvent, (login_event) => login_event.user)
-  login_event: LoginEvent[];
+  login_events: LoginEvent[];
 
   @CreateDateColumn()
   created_at: Date;

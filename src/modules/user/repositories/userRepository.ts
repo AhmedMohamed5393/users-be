@@ -5,20 +5,20 @@ import { IVerifyUserRequest } from "../models/interfaces/requests/IVerifyUserReq
 import { ILike, Repository } from "typeorm";
 import { User } from "../models/entities/user.entity";
 import { OrderEnum } from "../../../shared/enums/order.enum";
-import { PageOptionsDto } from "../../../shared/pagination/pageOption.dto";
-import { UpdateUserDto } from "../models/dtos/update-user.dto";
+import { RoleEnum } from "../../../shared/enums/role.enum";
+import { GetUsersDto } from "../models/dtos/get-users.dto";
 
 const TAG = "users-be:user:userRepository";
 
 export class UserRepository implements IUserRepository {
     private userModel: Promise<Repository<User>>;
     private database: Database;
-    
+
     constructor() {
         this.database = new Database();
         this.userModel = this.database.getRepository(User);
     }
-    
+
     public async getUserBy(where: any, select: any): Promise<User> {
         try {
             return await (await this.userModel).findOne({ where, select });
@@ -64,7 +64,7 @@ export class UserRepository implements IUserRepository {
         }
     }
 
-    public async findAll(pageOptionsDto: PageOptionsDto): Promise<any> {
+    public async findAll(getUsersDto: GetUsersDto): Promise<any> {
         const {
             skip,
             take,
@@ -73,7 +73,7 @@ export class UserRepository implements IUserRepository {
             fromDate,
             toDate,
             is_email_verified,
-        } = pageOptionsDto;
+        } = getUsersDto;
 
         const where = [];
 
@@ -83,20 +83,22 @@ export class UserRepository implements IUserRepository {
             filterBy['is_email_verified'] = is_email_verified;
         }
 
-        filterBy['role'] = role;
+        filterBy['role'] = !role?.length ? RoleEnum.client : role;
 
-        filterBy['created_at'] = getDateRange(fromDate, toDate);
+        if (fromDate?.length || toDate?.length) {
+            filterBy['created_at'] = getDateRange(fromDate, toDate);
+        }
 
         if (search?.length) {
             const items = [
-              {
-                name: ILike(`%${search}%`),
-                ...filterBy,
-              },
-              {
-                email: ILike(`%${search}%`),
-                ...filterBy,
-              },
+                {
+                    name: ILike(`%${search}%`),
+                    ...filterBy,
+                },
+                {
+                    email: ILike(`%${search}%`),
+                    ...filterBy,
+                },
             ];
             where.push(...items);
         } else {
@@ -173,6 +175,92 @@ export class UserRepository implements IUserRepository {
             const log = {
                 message: error,
                 tag: `${TAG}:deleteUser`,
+                status: 500,
+            };
+
+            getLogger(log);
+        }
+    }
+
+    public async countRegisteredUsers(): Promise<number> {
+        try {
+            return await (await this.userModel).count({
+                where: { role: RoleEnum.client },
+            });
+        } catch (error) {
+            const log = {
+                message: error,
+                tag: `${TAG}:countRegisteredUsers`,
+                status: 500,
+            };
+
+            getLogger(log);
+        }
+    }
+
+    public async countVerifiedUsers(): Promise<number> {
+        try {
+            return await (await this.userModel).count({
+                where: {
+                    role: RoleEnum.client,
+                    is_email_verified: true,
+                },
+            });
+        } catch (error) {
+            const log = {
+                message: error,
+                tag: `${TAG}:countVerifiedUsers`,
+                status: 500,
+            };
+
+            getLogger(log);
+        }
+    }
+
+    public async getTop3UsersByLoginFrequency(): Promise<User[]> {
+        try {
+            return await (await this.userModel)
+                .createQueryBuilder("user")
+                .leftJoinAndSelect("user.login_events", "loginEvent")
+                .select("user.id", "id")
+                .addSelect("user.name", "name")
+                .addSelect("user.email", "email")
+                .addSelect("COUNT(loginEvent.id)", "count")
+                .where("user.role = :role", { role: RoleEnum.client })
+                .groupBy("user.id")
+                .orderBy("count", "DESC")
+                .limit(3)
+                .getRawMany();
+        } catch (error) {
+            const log = {
+                message: error,
+                tag: `${TAG}:getTop3UsersByLoginFrequency`,
+                status: 500,
+            };
+
+            getLogger(log);
+        }
+    }
+
+    public async getInactiveUsers(date: Date): Promise<User[]> {
+        try {
+            return await (await this.userModel)
+                .createQueryBuilder("user")
+                .leftJoinAndSelect(
+                    "user.login_events",
+                    "loginEvent",
+                    "loginEvent.created_at > :date",
+                    { date }
+                )
+                .select("user.id", "id")
+                .addSelect("user.name", "name")
+                .addSelect("user.email", "email")
+                .where("loginEvent.id IS NULL")
+                .getRawMany();
+        } catch (error) {
+            const log = {
+                message: error,
+                tag: `${TAG}:getInactiveUsers`,
                 status: 500,
             };
 

@@ -7,10 +7,9 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { OrderEnum } from '../enums/order.enum';
-import { RoleEnum } from '../enums/role.enum';
+import { OrderEnum } from '../../../../shared/enums/order.enum';
 
-export class PageOptionsDto {
+export class GetUsersDto {
   @IsEnum(OrderEnum)
   @IsOptional()
   readonly order?: string = OrderEnum.ASC;

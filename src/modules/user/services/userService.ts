@@ -6,7 +6,6 @@ import { getLogger } from "../../../shared/utils/helpers";
 import { IVerifyUserRequest } from "../models/interfaces/requests/IVerifyUserRequest";
 import { IUserCheck } from "../models/interfaces/requests/IUserCheck";
 import { UserMapper } from "../mappers/user.mapper";
-import { PageOptionsDto } from "../../../shared/pagination/pageOption.dto";
 import { PageMeta } from "../../../shared/pagination/page-meta";
 import { UpdateUserDto } from "../models/dtos/update-user.dto";
 import { CreateUserDto } from "../models/dtos/create-user.dto";
@@ -14,6 +13,8 @@ import { User } from "../models/entities/user.entity";
 import { LoginEvent } from "../models/entities/login-event.entity";
 import { ILoginEventRepository } from "../models/interfaces/classes/ILoginEventRepository";
 import { LoginEventRepository } from "../repositories/loginEventRepository";
+import { ICountUsersResponse } from "../models/interfaces/responses/ICountUsersResponse";
+import { GetUsersDto } from "../models/dtos/get-users.dto";
 
 const TAG = "users-be:user:userService";
 
@@ -129,15 +130,15 @@ export class UserService implements IUserService {
         }
     }
 
-    public async findAllUsers(pageOptionsDto: PageOptionsDto): Promise<any> {
+    public async findAllUsers(getUsersDto: GetUsersDto): Promise<any> {
         try {
-            const response = await this.userRepository.findAll(pageOptionsDto);
+            const response = await this.userRepository.findAll(getUsersDto);
 
             const data = response.data;
             const meta = new PageMeta({
                 itemsPerPage: data.length,
                 total: response.total,
-                pageOptionsDto: pageOptionsDto,
+                pageOptionsDto: getUsersDto,
             });
 
             return { data, meta };
@@ -206,6 +207,68 @@ export class UserService implements IUserService {
             const log = {
                 message: error,
                 tag: `${TAG}:addLoginEvent`,
+                status: 500,
+            };
+
+            getLogger(log);
+        }
+    }
+
+    public async countUsers(): Promise<ICountUsersResponse> {
+        try {
+            const registered_users = await this.userRepository.countRegisteredUsers();
+            const verified_users = await this.userRepository.countVerifiedUsers();
+
+            return {
+                registered_users,
+                verified_users,
+            };
+        } catch (error) {
+            const log = {
+                message: error,
+                tag: `${TAG}:countUsers`,
+                status: 500,
+            };
+
+            getLogger(log);
+        }
+    }
+
+    public async getTopActiveUsers(): Promise<User[]> {
+        try {
+            return await this.userRepository.getTop3UsersByLoginFrequency();
+        } catch (error) {
+            const log = {
+                message: error,
+                tag: `${TAG}:getTopActiveUsers`,
+                status: 500,
+            };
+
+            getLogger(log);
+        }
+    }
+
+    public async getInactiveUsersWithDuration(interval: string): Promise<User[]> {
+        try {
+            const date = new Date();
+            if (!interval || interval.toLowerCase() !== "month") {
+                date.setHours(date.getHours() - 1);
+            } else {
+                date.setMonth(date.getMonth() - 1);
+            }
+
+            const users = await this.userRepository.getInactiveUsers(date);
+            const data = users.map((user) => {
+                delete user.login_events;
+
+                return user;
+            });
+
+            return data;
+        } catch (error) {
+            const log = {
+                message: error,
+                tag: `${TAG}:getTopActiveUsers`,
                 status: 500,
             };
 

@@ -14,9 +14,9 @@ const TAG = "users-be:user:service";
 
 export class Service implements IService {
     private userService: IUserService;
-    
+
     public static globalEvents = new EventEmitter();
-    
+
     constructor() {
         this.userService = new UserService();
     }
@@ -42,36 +42,38 @@ export class Service implements IService {
             return res.status(500).json({ message: "Error occurred" });
         }
     }
-    
+
     public async signin(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
             const { email, password } = req.body;
 
             // check existance of user by email or phone or name
             const checkPayload: IUserCheck = { email: email };
-            const isExistUser = await this.userService.checkExistance(checkPayload);
-            if (!isExistUser) {
+            const user = await this.userService.checkExistance(checkPayload);
+            if (!user) {
                 return res.status(404).json({ message: "User isn't found" });
             }
 
             // compare passwords
-            const isMatch = comparePassword(password, isExistUser.password);
+            const isMatch = comparePassword(password, user.password);
             if (!isMatch) {
                 return res.status(422).json({ message: "Passwords mismatch" });
             }
 
-            if (!isExistUser.is_email_verified) {
+            if (!user.is_email_verified) {
                 return res.status(422).json({ message: "Email isn't verified" });
             }
 
             // prepare payload with generating jwt token
             const payload = {
-                sub: isExistUser.id,
-                username: isExistUser.email,
-                role: isExistUser.role,
+                sub: user.id,
+                username: user.email,
+                role: user.role,
             };
             const token = encryptToken(payload);
             res.cookie('token', token);
+
+            this.userService.addLoginEvent(user.id);
 
             // prepare response
             return res.status(200).json({
@@ -90,7 +92,7 @@ export class Service implements IService {
             return res.status(500).json({ message: "Error occurred" });
         }
     }
-    
+
     public async verifyEmail(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
             const { email, email_token } = req.body;
@@ -162,13 +164,21 @@ export class Service implements IService {
             return res.status(500).json({ message: "Error occurred" });
         }
     }
-    
+
     public async findAll(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
-            const pageOptionsDto = req.query as any;
-            const response = await this.userService.findAllUsers(pageOptionsDto);
-            
+            const getUsersDto = req.query as any;
+            const paginatedData = await this.userService.findAllUsers(getUsersDto);
+
+            // retrieve statistics of users
+            const statisticsData = await this.userService.countUsers();
+
             // prepare response
+            const response = {
+                ...statisticsData,
+                ...paginatedData,
+            };
+
             return res.status(200).json(response);
         } catch (error) {
             const log = {
@@ -182,7 +192,7 @@ export class Service implements IService {
             return res.status(500).json({ message: "Error occurred" });
         }
     }
-    
+
     public async findOne(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
             const id = req.params.id;
@@ -263,6 +273,41 @@ export class Service implements IService {
             const log = {
                 message: error,
                 tag: `${TAG}:delete`,
+                status: 500,
+            };
+
+            getLogger(log);
+
+            return res.status(500).json({ message: "Error occurred" });
+        }
+    }
+
+    public async getTopActiveUsers(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const data = await this.userService.getTopActiveUsers();
+            return res.status(200).json(data);
+        } catch (error) {
+            const log = {
+                message: error,
+                tag: `${TAG}:getTopActiveUsers`,
+                status: 500,
+            };
+
+            getLogger(log);
+
+            return res.status(500).json({ message: "Error occurred" });
+        }
+    }
+
+    public async getInactiveUsers(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const interval = req.query.interval as string;
+            const data = await this.userService.getInactiveUsersWithDuration(interval);
+            return res.status(200).json(data);
+        } catch (error) {
+            const log = {
+                message: error,
+                tag: `${TAG}:getInactiveUsers`,
                 status: 500,
             };
 

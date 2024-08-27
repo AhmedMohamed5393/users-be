@@ -11,7 +11,7 @@ export class LoginEvent {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.login_event)
+  @ManyToOne(() => User, (user) => user.login_events)
   user: User;
 
   @CreateDateColumn()

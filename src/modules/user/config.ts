@@ -8,7 +8,7 @@ import { UpdateUserDto } from "./models/dtos/update-user.dto";
 import { VerifyUserDto } from "./models/dtos/verify-user.dto";
 import { LoginDto } from "./models/dtos/login.dto";
 import { QueryRequestValidationMiddleware } from "../../shared/middlewares/queryRequestValidationMiddleware";
-import { PageOptionsDto } from "../../shared/pagination/pageOption.dto";
+import { GetUsersDto } from "./models/dtos/get-users.dto";
 
 export class ServiceConfig implements IConfig {
     public middlewares = [
@@ -17,7 +17,7 @@ export class ServiceConfig implements IConfig {
     ];
 
     public middlewareFactory = new MiddlewareFactory();
-    
+
     public endpoints: IEndpoint[] = [
         {
             url: "/auth/signup",
@@ -53,7 +53,7 @@ export class ServiceConfig implements IConfig {
             middlewares: [
                 this.middlewareFactory.getMiddleware("AuthMiddleware").execute,
                 this.middlewareFactory.getMiddleware("RoleMiddleware").execute,
-                QueryRequestValidationMiddleware(PageOptionsDto),
+                QueryRequestValidationMiddleware(GetUsersDto),
             ],
             function: "findAll",
         },
@@ -79,14 +79,22 @@ export class ServiceConfig implements IConfig {
             function: "update",
         },
         {
-            url: "/:id",
-            verb: "delete",
+            url: "/top/list",
+            verb: "get",
             middlewares: [
                 this.middlewareFactory.getMiddleware("AuthMiddleware").execute,
                 this.middlewareFactory.getMiddleware("RoleMiddleware").execute,
-                this.middlewareFactory.getMiddleware("IdValidationMiddleware").execute,
             ],
-            function: "delete",
+            function: "getTopActiveUsers",
+        },
+        {
+            url: "/inactive/list",
+            verb: "get",
+            middlewares: [
+                this.middlewareFactory.getMiddleware("AuthMiddleware").execute,
+                this.middlewareFactory.getMiddleware("RoleMiddleware").execute,
+            ],
+            function: "getInactiveUsers",
         },
     ];
 }

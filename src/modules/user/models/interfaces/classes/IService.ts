@@ -1,19 +1,23 @@
-import * as express from "express";
+import { Request, Response, NextFunction } from "express";
 
 export interface IService {
-    signup(req: express.Request, res: express.Response, next: express.NextFunction): Promise<any>;
+    signup(req: Request, res: Response, next: NextFunction): Promise<any>;
 
-    signin(req: express.Request, res: express.Response, next: express.NextFunction): Promise<any>;
+    signin(req: Request, res: Response, next: NextFunction): Promise<any>;
 
-    verifyEmail(req: express.Request, res: express.Response, next: express.NextFunction): Promise<any>;
+    verifyEmail(req: Request, res: Response, next: NextFunction): Promise<any>;
     
-    create(req: express.Request, res: express.Response, next: express.NextFunction): Promise<any>;
+    create(req: Request, res: Response, next: NextFunction): Promise<any>;
 
-    findAll(req: express.Request, res: express.Response, next: express.NextFunction): Promise<any>;
+    findAll(req: Request, res: Response, next: NextFunction): Promise<any>;
 
-    findOne(req: express.Request, res: express.Response, next: express.NextFunction): Promise<any>;
+    findOne(req: Request, res: Response, next: NextFunction): Promise<any>;
 
-    update(req: express.Request, res: express.Response, next: express.NextFunction): Promise<any>;
+    update(req: Request, res: Response, next: NextFunction): Promise<any>;
 
-    delete(req: express.Request, res: express.Response, next: express.NextFunction): Promise<any>;
+    delete(req: Request, res: Response, next: NextFunction): Promise<any>;
+
+    getTopActiveUsers(req: Request, res: Response, next: NextFunction): Promise<any>;
+
+    getInactiveUsers(req: Request, res: Response, next: NextFunction): Promise<any>;
 }
