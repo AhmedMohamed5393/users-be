@@ -9,8 +9,8 @@ export class PageMeta {
   readonly hasPreviousPage: boolean;
   readonly hasNextPage: boolean;
   constructor({ pageOptionsDto, total, itemsPerPage }: IPageMetaParameters) {
-    this.page = pageOptionsDto.page;
-    this.take = pageOptionsDto.take;
+    this.page = +pageOptionsDto.page || 1;
+    this.take = +pageOptionsDto.take || 10;
     this.itemsPerPage = itemsPerPage;
     this.total = total;
     this.pageCount = Math.ceil(this.total / this.take);

@@ -2,6 +2,10 @@ import Debug from "debug";
 import express from "express";
 import * as env from "./environment";
 import user from "./modules/user/router";
+// import { Database } from "./database/database";
+// import { User } from "./modules/user/models/entities/user.entity";
+// import { encryptPassword } from "./shared/utils/bcrypt";
+// import { RoleEnum } from "./shared/enums/role.enum";
 
 const debug = Debug("users-be");
 const app = express();
@@ -11,7 +15,18 @@ const host = env.HOST;
 // use modules routes
 app.use(user);
 
-app.get("/", (req, res) => { res.send("App is up and running!"); });
+app.get("/", async (req, res) => {
+    // const repository = await new Database().getRepository(User);
+
+    // const user = new User();
+    // user.name = "Admin";
+    // user.email = "admin123@gmail.com";
+    // user.password = "12345678";
+    // user.role = RoleEnum.admin;
+
+    // await repository.save(user);
+    res.send("App is up and running!");
+});
 
 app.use(notFoundHandler);
 app.set("port", port);

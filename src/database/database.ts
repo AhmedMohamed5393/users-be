@@ -78,4 +78,5 @@ const dbConfig: DataSourceOptions = {
     synchronize: DB_SYNC,
     logging: DB_LOGGING,
     entities: [User, LoginEvent],
+    migrations: ["src/database/migration/**/*.ts"],
 };

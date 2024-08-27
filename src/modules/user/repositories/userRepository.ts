@@ -68,6 +68,7 @@ export class UserRepository implements IUserRepository {
         const {
             skip,
             take,
+            role,
             search,
             fromDate,
             toDate,
@@ -82,9 +83,11 @@ export class UserRepository implements IUserRepository {
             filterBy['is_email_verified'] = is_email_verified;
         }
 
+        filterBy['role'] = role;
+
         filterBy['created_at'] = getDateRange(fromDate, toDate);
 
-        if (search) {
+        if (search?.length) {
             const items = [
               {
                 name: ILike(`%${search}%`),
@@ -149,7 +152,7 @@ export class UserRepository implements IUserRepository {
         }
     }
 
-    public async updateUser(id: number, payload: UpdateUserDto): Promise<void> {
+    public async updateUser(id: number, payload: any): Promise<void> {
         try {
             await (await this.userModel).update(id, payload);
         } catch (error) {

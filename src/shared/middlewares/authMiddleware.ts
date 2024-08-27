@@ -16,16 +16,19 @@ export class AuthMiddleware implements IMiddleware {
             const credentials: string = cookies?.token || headers?.authorization;
             if (
                 !credentials ||
-                !credentials.startsWith("eyJ") || // in case of using token in cookie storage
-                !( // in case of using token in request headers
-                    credentials.includes("Bearer ") &&
-                    credentials.split(" ")[1]?.startsWith("eyJ")
+                (!credentials.startsWith("eyJ") && cookies?.token) || // in case of using token in cookie storage
+                ( // in case of using token in request headers
+                    !(
+                        credentials.includes("Bearer ") &&
+                        credentials.split(" ")[1]?.startsWith("eyJ")
+                    ) &&
+                    headers?.authorization
                 )
             ) {
                 return res.status(401).json({ message: "Unauthorized" });
             }
 
-            const token: string = credentials || credentials.split(" ")[1];
+            const token: string = !headers?.authorization ? credentials : credentials.split(" ")[1];
             const payload = decryptToken(token);
 
             const userService = new UserService();

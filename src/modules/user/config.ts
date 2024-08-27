@@ -2,11 +2,13 @@ import { IConfig, IEndpoint } from "../../shared/interfaces/IConfig";
 import bodyparser from "body-parser";
 import cookieParser from "cookie-parser";
 import { MiddlewareFactory } from "../../shared/middlewares/middlewareFactory";
-import { validationMiddleware } from "../../shared/middlewares/validationMiddleware";
+import { BodyRequestValidationMiddleware } from "../../shared/middlewares/bodyRequestValidationMiddleware";
 import { CreateUserDto } from "./models/dtos/create-user.dto";
 import { UpdateUserDto } from "./models/dtos/update-user.dto";
 import { VerifyUserDto } from "./models/dtos/verify-user.dto";
 import { LoginDto } from "./models/dtos/login.dto";
+import { QueryRequestValidationMiddleware } from "../../shared/middlewares/queryRequestValidationMiddleware";
+import { PageOptionsDto } from "../../shared/pagination/pageOption.dto";
 
 export class ServiceConfig implements IConfig {
     public middlewares = [
@@ -20,42 +22,43 @@ export class ServiceConfig implements IConfig {
         {
             url: "/auth/signup",
             verb: "post",
-            middlewares: [validationMiddleware(CreateUserDto)],
+            middlewares: [BodyRequestValidationMiddleware(CreateUserDto)],
             function: "signup",
         },
         {
             url: "/auth/signin",
             verb: "post",
-            middlewares: [validationMiddleware(LoginDto)],
+            middlewares: [BodyRequestValidationMiddleware(LoginDto)],
             function: "signin",
         },
         {
             url: "/auth/verify-email",
             verb: "patch",
-            middlewares: [validationMiddleware(VerifyUserDto)],
+            middlewares: [BodyRequestValidationMiddleware(VerifyUserDto)],
             function: "verifyEmail",
         },
         {
-            url: "/users",
+            url: "/",
             verb: "post",
             middlewares: [
                 this.middlewareFactory.getMiddleware("AuthMiddleware").execute,
                 this.middlewareFactory.getMiddleware("RoleMiddleware").execute,
-                validationMiddleware(CreateUserDto),
+                BodyRequestValidationMiddleware(CreateUserDto),
             ],
             function: "create",
         },
         {
-            url: "/users",
+            url: "/",
             verb: "get",
             middlewares: [
                 this.middlewareFactory.getMiddleware("AuthMiddleware").execute,
                 this.middlewareFactory.getMiddleware("RoleMiddleware").execute,
+                QueryRequestValidationMiddleware(PageOptionsDto),
             ],
             function: "findAll",
         },
         {
-            url: "/users/:id",
+            url: "/:id",
             verb: "get",
             middlewares: [
                 this.middlewareFactory.getMiddleware("AuthMiddleware").execute,
@@ -65,18 +68,18 @@ export class ServiceConfig implements IConfig {
             function: "findOne",
         },
         {
-            url: "/users/:id",
+            url: "/:id",
             verb: "patch",
             middlewares: [
                 this.middlewareFactory.getMiddleware("AuthMiddleware").execute,
                 this.middlewareFactory.getMiddleware("RoleMiddleware").execute,
                 this.middlewareFactory.getMiddleware("IdValidationMiddleware").execute,
-                validationMiddleware(UpdateUserDto),
+                BodyRequestValidationMiddleware(UpdateUserDto),
             ],
             function: "update",
         },
         {
-            url: "/users/:id",
+            url: "/:id",
             verb: "delete",
             middlewares: [
                 this.middlewareFactory.getMiddleware("AuthMiddleware").execute,

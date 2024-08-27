@@ -20,7 +20,7 @@ export class UserMapper {
 
         response['name'] = payload.name || user.name;
         response['email'] = payload.email || user.email;
-        response['role'] = payload.password || user.password;
+        response['password'] = payload.password || user.password;
 
         return response;
     }

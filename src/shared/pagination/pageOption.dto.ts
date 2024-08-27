@@ -8,6 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { OrderEnum } from '../enums/order.enum';
+import { RoleEnum } from '../enums/role.enum';
 
 export class PageOptionsDto {
   @IsEnum(OrderEnum)
@@ -29,18 +30,22 @@ export class PageOptionsDto {
 
   @IsOptional()
   readonly search?: string;
-  
+
   @IsOptional()
-  @IsDateString()
+  // @IsDateString()
   readonly fromDate?: string;
-  
+
   @IsOptional()
-  @IsDateString()
+  // @IsDateString()
   readonly toDate?: string;
 
   @IsOptional()
   readonly is_email_verified?: boolean;
-  
+
+  @IsOptional()
+  // @IsEnum(RoleEnum, { message: "role should be admin or client only" })
+  readonly role?: string;
+
   get skip(): number {
     return (this.page - 1) * this.take;
   }

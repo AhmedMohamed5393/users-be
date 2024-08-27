@@ -20,7 +20,11 @@
     "lint-tests": "tslint --project './tests/.'",
     "test": "jest --coverage --detectOpenHandles",
     "mergetests": "npm run reinstall && npm run test",
-    "reinstall": "( rm  package-lock.json && rm -r node_modules && rm -r dist && npm install ) ||  npm install "
+    "reinstall": "( rm  package-lock.json && rm -r node_modules && rm -r dist && npm install ) ||  npm install ",
+    "typeorm": "ts-node-dev ./node_modules/typeorm/cli",
+    "migration:generate": "npm run typeorm migration:generate -- -d src/database/database.ts",
+    "migration:run": "npm run typeorm migration:run -- -d src/database/database.ts",
+    "migration:revert": "npm run typeorm migration:revert -- -d src/database/database.ts"
   },
   "author": "Ahmed Mohamed",
   "license": "UNLICENCED",
@@ -61,6 +65,8 @@
     "jest": "^29.7.0",
     "node-mocks-http": "^1.15.1",
     "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
     "tslint": "^6.1.3",
     "typescript": "^5.5.4"
   },

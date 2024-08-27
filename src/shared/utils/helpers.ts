@@ -64,4 +64,4 @@ export function getDateRange(fromDate: string, toDate: string) {
     const start_date = start || from || new Date('2024-01-01T00:00:00');
     const end_date = end || to || new Date();
     return Between(start_date, end_date);
-  }
+}

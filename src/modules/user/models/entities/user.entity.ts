@@ -5,9 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { RoleEnum } from '../../../../shared/enums/role.enum';
 import { LoginEvent } from './login-event.entity';
+import { encryptPassword } from '../../../../shared/utils/bcrypt';
 
 @Entity('users')
 export class User {
@@ -37,4 +40,12 @@ export class User {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  async hashPassword() {
+    if (this.password) {
+      this.password = encryptPassword(this.password);
+    }
+  }
 }
