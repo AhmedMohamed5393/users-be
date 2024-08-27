@@ -11,6 +11,8 @@ import {
     DB_SYNC,
     DB_USERNAME,
 } from "../environment";
+import { User } from "../modules/user/models/entities/user.entity";
+import { LoginEvent } from "../modules/user/models/entities/login-event.entity";
 
 const TAG = "users-be:database";
 
@@ -24,10 +26,12 @@ export class Database {
         this.initialize();
     }
 
-    public getRepository(entity: any): Repository<any> {
+    public async getRepository(entity: any): Promise<Repository<any>> {
         try {
             if (!this.isConnected) {
                 this.isConnected = true;
+                await this.connection.initialize();
+                Database.events.emit("database connected");
             }
 
             return this.connection.getRepository(entity);
@@ -42,17 +46,25 @@ export class Database {
     }
 
     private async initialize() {
-        this.connection = await new DataSource(dbConfig).initialize();
-        
+        this.connection = new DataSource(dbConfig);
+
         Database.events.once(
             "database connected",
-            () => console.log("Fire database-connected"),
+            () => console.log("Database connected."),
         );
 
         Database.events.once(
             "database disconnected",
-            () => console.log("Fire database-disconnected"),
+            () => console.log("Database disconnected."),
         );
+
+        try {
+            await this.connection.initialize();
+            this.isConnected = true;
+            Database.events.emit("database connected");
+        } catch (error) {
+            console.error("Failed to connect to the database:", error);
+        }
     }
 }
 
@@ -65,5 +77,5 @@ const dbConfig: DataSourceOptions = {
     host: DB_HOST,
     synchronize: DB_SYNC,
     logging: DB_LOGGING,
-    entities: ["dist/entity/*.js"],
+    entities: [User, LoginEvent],
 };

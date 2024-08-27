@@ -11,7 +11,7 @@ import { UpdateUserDto } from "../models/dtos/update-user.dto";
 const TAG = "users-be:user:userRepository";
 
 export class UserRepository implements IUserRepository {
-    private userModel: Repository<User>;
+    private userModel: Promise<Repository<User>>;
     private database: Database;
     
     constructor() {
@@ -21,7 +21,7 @@ export class UserRepository implements IUserRepository {
     
     public async getUserBy(where: any, select: any): Promise<User> {
         try {
-            return await this.userModel.findOne({ where, select });
+            return await (await this.userModel).findOne({ where, select });
         } catch (error) {
             const log = {
                 message: error,
@@ -35,7 +35,7 @@ export class UserRepository implements IUserRepository {
 
     public async createUser(payload: User): Promise<User> {
         try {
-            return await this.userModel.save(payload);
+            return await (await this.userModel).save(payload);
         } catch (error) {
             const log = {
                 message: error,
@@ -49,7 +49,7 @@ export class UserRepository implements IUserRepository {
 
     public async verifyUser(payload: IVerifyUserRequest): Promise<any> {
         try {
-            return await this.userModel.update(
+            return await (await this.userModel).update(
                 { email: payload.email },
                 { is_email_verified: true },
             );
@@ -101,7 +101,7 @@ export class UserRepository implements IUserRepository {
         }
 
         try {
-            const [data, total] = await this.userModel.findAndCount({
+            const [data, total] = await (await this.userModel).findAndCount({
                 where: where,
                 select: {
                     id: true,
@@ -127,7 +127,7 @@ export class UserRepository implements IUserRepository {
 
     public async findOneById(id: number): Promise<any> {
         try {
-            return await this.userModel.findOne({
+            return await (await this.userModel).findOne({
                 where: { id },
                 select: {
                     id: true,
@@ -151,7 +151,7 @@ export class UserRepository implements IUserRepository {
 
     public async updateUser(id: number, payload: UpdateUserDto): Promise<void> {
         try {
-            await this.userModel.update(id, payload);
+            await (await this.userModel).update(id, payload);
         } catch (error) {
             const log = {
                 message: error,
@@ -165,7 +165,7 @@ export class UserRepository implements IUserRepository {
 
     public async deleteUser(id: number): Promise<void> {
         try {
-            await this.userModel.delete(id);
+            await (await this.userModel).delete(id);
         } catch (error) {
             const log = {
                 message: error,
